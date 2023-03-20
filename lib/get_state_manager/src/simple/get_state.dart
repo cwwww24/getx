@@ -156,6 +156,7 @@ abstract class Bind<T> extends StatelessWidget {
     return _FactoryBind<S>(
       create: builder,
       tag: tag,
+      global: false,
     );
   }
 
@@ -462,7 +463,15 @@ class BindElement<T> extends InheritedElement {
         }
       }
     } else {
-      _controllerBuilder = widget.create?.call(this) ?? widget.init;
+      if (widget.create != null) {
+        _controllerBuilder = () => widget.create!.call(this);
+        Get.create<T>(_controllerBuilder!, tag: widget.tag, permanent: false);
+      } else {
+        _controllerBuilder = widget.init;
+      }
+      _controllerBuilder =
+          (widget.create != null ? () => widget.create!.call(this) : null) ??
+              widget.init;
       _isCreator = true;
       _needStart = true;
     }
@@ -473,7 +482,7 @@ class BindElement<T> extends InheritedElement {
   /// setState "link" from the Controller.
   void _subscribeToController() {
     if (widget.filter != null) {
-      _filter = widget.filter!(_controller!);
+      _filter = widget.filter!(_controller as T);
     }
     final filter = _filter != null ? _filterUpdate : getUpdate;
     final localController = _controller;
@@ -501,7 +510,7 @@ class BindElement<T> extends InheritedElement {
   }
 
   void _filterUpdate() {
-    var newFilter = widget.filter!(_controller!);
+    var newFilter = widget.filter!(_controller as T);
     if (newFilter != _filter) {
       _filter = newFilter;
       getUpdate();

@@ -32,7 +32,7 @@ mixin StateMixin<T> on ListNotifier {
   void _fillInitialStatus() {
     _status = (_value == null || _value!._isEmpty())
         ? GetStatus<T>.loading()
-        : GetStatus<T>.success(_value!);
+        : GetStatus<T>.success(_value as T);
   }
 
   GetStatus<T> get status {
@@ -71,7 +71,7 @@ mixin StateMixin<T> on ListNotifier {
     }
   }
 
-  void futurize(Future<T> Function()  body,
+  void futurize(Future<T> Function() body,
       {T? initialData, String? errorMessage, bool useEmpty = true}) {
     final compute = body;
     _value ??= initialData;
@@ -231,12 +231,12 @@ extension StateExt<T> on StateMixin<T> {
             : Center(child: Text('A error occurred: ${status.errorMessage}'));
       } else if (status.isEmpty) {
         return onEmpty ??
-            SizedBox.shrink(); // Also can be widget(null); but is risky
+            const SizedBox.shrink(); // Also can be widget(null); but is risky
       } else if (status.isSuccess) {
         return widget(value);
       } else if (status.isCustom) {
         return onCustom?.call(_) ??
-            SizedBox.shrink(); // Also can be widget(null); but is risky
+            const SizedBox.shrink(); // Also can be widget(null); but is risky
       }
       return widget(value);
     });
@@ -247,11 +247,11 @@ typedef NotifierBuilder<T> = Widget Function(T state);
 
 abstract class GetStatus<T> with Equality {
   const GetStatus();
-  factory GetStatus.loading() => LoadingStatus();
-  factory GetStatus.error(String message) => ErrorStatus(message);
-  factory GetStatus.empty() => EmptyStatus();
-  factory GetStatus.success(T data) => SuccessStatus(data);
-  factory GetStatus.custom() => CustomStatus();
+  factory GetStatus.loading() => LoadingStatus<T>();
+  factory GetStatus.error(String message) => ErrorStatus<T, String>(message);
+  factory GetStatus.empty() => EmptyStatus<T>();
+  factory GetStatus.success(T data) => SuccessStatus<T>(data);
+  factory GetStatus.custom() => CustomStatus<T>();
 }
 
 class CustomStatus<T> extends GetStatus<T> {
